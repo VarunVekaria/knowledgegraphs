@@ -1,0 +1,21 @@
+Extracting triples via the LLM...
+Extracted 17 triples:
+  Amcor -[exposed_to]-> changes_in_consumer_demand_patterns
+  Amcor -[depends_on]-> volume_of_sales_made_by_customers
+  Amcor -[adopted]-> strategies_to_mitigate_declining_sales
+  Amcor -[produces]-> new_products
+  Amcor -[experienced]-> customer_consolidation
+  Amcor -[faced]-> significant_competition
+  Amcor -[acquired]-> Bemis
+  Amcor -[expected_to_generate]-> cost_synergies_from_Bemis_acquisition
+  Amcor -[relies_on]-> intellectual_property_rights
+  Amcor -[subject_to]-> environmental_and_health_and_safety_laws
+  Amcor -[exposed_to]-> foreign_exchange_rate_risk
+  Amcor -[subject_to]-> labor_disputes
+  Amcor -[identified]-> material_weaknesses_in_internal_control
+  Amcor -[maintains]-> insurance_policies
+  Amcor -[organized_under]-> laws_of_Jersey_Channel_Islands
+  Amcor -[subject_to]-> litigation
+  Amcor -[subject_to]-> changing_government_regulations
+
+Loaded into Neo4j. Total triples now: 17
