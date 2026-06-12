@@ -147,6 +147,24 @@ class GraphStore:
         with self.driver.session() as s:
             return [dict(record) for record in s.run(query, names=names)]
 
+    def chunks_by_ids(self, chunk_ids: list[str]) -> list[dict]:
+        """Return the chunks with the given ids, in reading order.
+
+        Used to fetch the source chunks of a specific set of facts (each fact
+        carries the chunk_id it was extracted from).
+        """
+        if not chunk_ids:
+            return []
+        query = """
+        MATCH (c:Chunk)
+        WHERE c.chunk_id IN $ids
+        RETURN c.chunk_id AS chunk_id, c.index AS index,
+               c.start_line AS start_line, c.end_line AS end_line, c.text AS text
+        ORDER BY index
+        """
+        with self.driver.session() as s:
+            return [dict(record) for record in s.run(query, ids=chunk_ids)]
+
     def all_triples(self) -> list[dict]:
         """Dump the domain layer as triples with provenance (inspection)."""
         query = """

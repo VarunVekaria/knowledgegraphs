@@ -16,9 +16,10 @@ import re
 import llm
 from graph_store import GraphStore
 
-# How many facts / chunks survive ranking and reach the LLM.
+# How many facts survive ranking and reach the LLM. Chunk context is pulled only
+# from the highest-ranked CHUNK_FROM_TOP of those facts (keeps passages focused).
 TOP_FACTS = 40
-TOP_CHUNKS = 5
+CHUNK_FROM_TOP = 10
 
 _STOPWORDS = {
     "the", "a", "an", "of", "to", "in", "on", "and", "or", "for", "is", "are",
@@ -122,26 +123,27 @@ def _rank(items, text_of, weights, q_words, top_k):
 def answer(question: str, store: GraphStore, hops: int = 2, verbose: bool = False) -> str:
     entities = _question_entities(question)
 
-    # Stage 1: broad candidate generation from the graph.
+    # Stage 1: broad candidate generation from the domain layer (facts only).
     candidates = store.subgraph_for_entities(entities, hops=hops) if entities else []
     if not candidates:
         candidates = store.all_triples()
-    candidate_chunks = store.chunks_for_entities(entities) if entities else []
 
-    # Stage 2: rank by relevance to the question and trim.
+    # Stage 2: rank facts by relevance to the question and keep the top ones.
     q_words = _words(question)
     weights = _entity_weights(entities, candidates)
     triples = _rank(candidates, _fact_text, weights, q_words, TOP_FACTS)
-    chunks = _rank(
-        candidate_chunks, lambda c: str(c.get("text", "")).lower(),
-        weights, q_words, TOP_CHUNKS,
-    )
+
+    # Stage 3: pull lexical chunks behind only the top-ranked facts.
+    chunk_ids = list(dict.fromkeys(
+        t["chunk_id"] for t in triples[:CHUNK_FROM_TOP] if t.get("chunk_id")
+    ))
+    chunks = store.chunks_by_ids(chunk_ids)
 
     if verbose:
         print(f"\n[entities] {entities}")
         print(
-            f"[candidates: {len(candidates)} facts, {len(candidate_chunks)} chunks "
-            f"-> kept {len(triples)} facts, {len(chunks)} chunks]"
+            f"[candidates: {len(candidates)} facts -> kept {len(triples)} facts "
+            f"-> {len(chunks)} source chunks]"
         )
         print("[entity weights] " + ", ".join(
             f"{e}={w:.2f}" for e, w in weights.items()
